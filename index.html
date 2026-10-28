@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>SLAP: Predicting Semantic Latents for Robust and Efficient World-Action Models</title>
+  <meta name="description" content="SLAP is a world-action model that predicts future semantic latents (DINO, SigLIP, V-JEPA) and actions instead of future pixels, giving robust and efficient robot manipulation.">
+  <meta property="og:title" content="SLAP: Predicting Semantic Latents for Robust and Efficient World-Action Models">
+  <meta property="og:description" content="Predict semantic latents, not pixels: robust and efficient world-action models for robot manipulation.">
+  <meta property="og:image" content="static/figures/teaser.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css?v=4">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+
+  <header class="topbar">
+    <a class="brand" href="#top">SLAP</a>
+    <nav aria-label="Sections">
+      <a href="#overview">Overview</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#ablations">Ablations</a>
+      <a href="#real">Real robot</a>
+      <a href="#sim">Simulation</a>
+      <a href="#bibtex">BibTeX</a>
+    </nav>
+  </header>
+
+  <main id="content">
+    <!-- ============================== HERO ============================== -->
+    <section class="hero wrap" id="top">
+      <h1>
+        <span class="acronym">SLAP</span>
+        Predicting Semantic Latents for Robust and Efficient World-Action Models
+      </h1>
+
+      <div class="links">
+        <a class="btn is-disabled" aria-disabled="true" title="Coming soon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 2.9.8.1-.7.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z" fill="currentColor"/></svg>
+          Code <span class="soon">soon</span>
+        </a>
+        <a class="btn is-disabled" aria-disabled="true" title="Coming soon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.8"/></svg>
+          arXiv <span class="soon">soon</span>
+        </a>
+        <a class="btn ghost" href="#real">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+          Rollout videos
+        </a>
+      </div>
+
+      <div class="pairs" aria-label="SLAP real-robot rollouts in and out of distribution">
+        <figure>
+          <video class="clip" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/spoon-id.jpg?v=4" src="static/videos/real/spoon-id.mp4?v=4"></video>
+          <figcaption><span class="pill id">ID</span> Spoon → plate</figcaption>
+        </figure>
+        <figure>
+          <video class="clip" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/spoon-layout-appearance.jpg" src="static/videos/real/spoon-layout-appearance.mp4"></video>
+          <figcaption><span class="pill ood">OOD</span> Spoon → plate · new layout + dark mat</figcaption>
+        </figure>
+        <figure>
+          <video class="clip" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/cable-id.jpg?v=4" src="static/videos/real/cable-id.mp4?v=4"></video>
+          <figcaption><span class="pill id">ID</span> Cable → drawer</figcaption>
+        </figure>
+        <figure>
+          <video class="clip" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/cable-layout.jpg" src="static/videos/real/cable-layout.mp4"></video>
+          <figcaption><span class="pill ood">OOD</span> Cable → drawer · unseen distractors</figcaption>
+        </figure>
+      </div>
+      <p class="reel-note">The same SLAP policy, trained from 30 demonstrations per task, in the training setup (ID) and under changes it never saw (OOD).</p>
+
+      <dl class="stats">
+        <div>
+          <dt>LIBERO-Plus</dt>
+          <dd>80.8<small>%</small></dd>
+          <p>+10.6 over Fast-WAM, without large-scale robot pretraining</p>
+        </div>
+        <div>
+          <dt>Real-robot OOD</dt>
+          <dd>87.5<small>%</small></dd>
+          <p>vs. 58.8% for π<sub>0.5</sub> under four perturbation types</p>
+        </div>
+        <div>
+          <dt>Latency / chunk</dt>
+          <dd>280<small>ms</small></dd>
+          <p>1.9× faster than Fast-WAM, 2.2× faster than Flex-π Joint</p>
+        </div>
+        <div>
+          <dt>Robot data</dt>
+          <dd>50<small>×</small></dd>
+          <p>less robot data than the baselines it matches</p>
+        </div>
+      </dl>
+    </section>
+
+    <!-- ============================== OVERVIEW ============================== -->
+    <section class="wrap" id="overview">
+      <div class="section-head">
+        <p class="num">01</p>
+        <h2>Predict what matters, not every pixel</h2>
+      </div>
+      <figure class="figure">
+        <button type="button" class="zoom" data-full="static/figures/teaser.jpg" data-title="Overview of SLAP">
+          <img src="static/figures/teaser.jpg" width="2400" height="793" alt="Left: SLAP takes the current camera image and predicts semantic visual features and actions, staying robust to the robot's initial state, table layout, table appearance, and lighting. Right: latency versus LIBERO-Plus success, where SLAP matches Flex-π Joint at 2.2 times lower latency and is far above Fast-WAM.">
+        </button>
+        <figcaption>
+          SLAP keeps working when the start pose, the clutter, the table, or the lighting changes (left), and it sits in the fast-and-robust corner of the latency vs. robustness trade-off (right).
+        </figcaption>
+      </figure>
+
+      <div class="abstract">
+        <h3>In short</h3>
+        <p>
+          World-action models turn video generators into robot policies by imagining the future and acting on it. But imagining every future pixel is slow, and it makes the policy care about things that don't matter for the task, like a shadow or a new tablecloth.
+        </p>
+        <p>
+          <strong>SLAP</strong> (<strong>S</strong>emantic <strong>L</strong>atent <strong>A</strong>ction <strong>P</strong>rediction) keeps the video model's knowledge of how the world moves, but asks it to predict <em>what</em> the future scene will contain, in the feature space of a vision encoder, rather than how it will look. The result is a policy that holds up under visual change, learns real tasks from a few dozen demonstrations, and runs about as fast as a standard VLA.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================== METHOD ============================== -->
+    <section class="wrap" id="method">
+      <div class="section-head">
+        <p class="num">02</p>
+        <h2>Method</h2>
+        <p class="lede">Start from a pretrained video model, which already knows how the world moves, and change three things to make it a good policy.</p>
+      </div>
+
+      <div class="ideas">
+        <article>
+          <span class="idea-n">1</span>
+          <h3>Semantic latents, not pixels</h3>
+          <p>A robot needs to know what is where and how it moves, not the exact color of every pixel. Predicting meaning instead of appearance makes the policy shrug off lighting and background changes, and it takes one pass instead of a long denoising loop.</p>
+        </article>
+        <article>
+          <span class="idea-n">2</span>
+          <h3>Read out from the middle</h3>
+          <p>The last layers of a video model specialize in drawing pixels, which control doesn't need. Stopping partway through gives better features for acting and a model that is about half the cost.</p>
+        </article>
+        <article>
+          <span class="idea-n">3</span>
+          <h3>Understand once, act many times</h3>
+          <p>The scene is processed once and cached; the action head then refines its plan against that cache. Inference stays close to the cost of a plain policy.</p>
+        </article>
+      </div>
+
+      <figure class="figure">
+        <button type="button" class="zoom" data-full="static/figures/method.jpg" data-title="SLAP architecture">
+          <img src="static/figures/method.jpg" width="1800" height="808" loading="lazy" alt="Architecture diagram: 15 DiT layers with video-action joint attention, separate video and action feed-forward networks, a semantic latent decoder on top of the video tokens, and an action-chunk output. On the right, the attention mask: video tokens attend causally to video tokens only, while action tokens attend to all tokens.">
+        </button>
+        <figcaption>
+          <strong>Architecture.</strong> Video and action tokens share one transformer. The video side predicts what the next frames will contain; the action side predicts what the robot should do. Actions can look at the video tokens, but not the other way around (right).
+        </figcaption>
+      </figure>
+
+      <figure class="figure">
+        <button type="button" class="zoom" data-full="static/figures/inference.jpg" data-title="Efficient inference">
+          <img src="static/figures/inference.jpg" width="1800" height="637" loading="lazy" alt="Inference: one forward pass through the video branch produces cached video tokens, then the action branch runs several denoising iterations reusing the cache.">
+        </button>
+        <figcaption>
+          <strong>Inference.</strong> Because the video side never looks at actions, it runs once and is cached. Only the small action side is repeated, so SLAP pays for the video model a single time per step.
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ============================== RESULTS ============================== -->
+    <section class="wrap" id="results">
+      <div class="section-head">
+        <p class="num">03</p>
+        <h2>Results</h2>
+        <p class="lede">SLAP keeps standard-benchmark performance while being markedly more robust under perturbation, at a latency close to VLAs.</p>
+      </div>
+
+      <div class="group-label">
+        <h3>LIBERO and LIBERO-Plus</h3>
+        <p>Success rate (%). <b>Bold</b>: best in column.</p>
+      </div>
+      <div class="table-scroll">
+        <table class="results">
+          <thead>
+            <tr>
+              <th scope="col">Method</th>
+              <th scope="col" title="Large-scale robot-data pretraining">Robot PT</th>
+              <th scope="col">LIBERO</th>
+              <th scope="col">LIBERO-Plus</th>
+              <th scope="col">Camera</th>
+              <th scope="col">Robot</th>
+              <th scope="col">Lang.</th>
+              <th scope="col">Light</th>
+              <th scope="col">BG</th>
+              <th scope="col">Noise</th>
+              <th scope="col">Layout</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="cat"><th colspan="11" scope="rowgroup">Vision-language-action models</th></tr>
+            <tr><th scope="row">OpenVLA</th><td>Yes</td><td>76.5</td><td>15.6 <span class="drop">↓60.9</span></td><td>0.8</td><td>3.5</td><td>23.0</td><td>8.1</td><td>34.8</td><td>15.2</td><td>28.5</td></tr>
+            <tr><th scope="row">OpenVLA-OFT</th><td>Yes</td><td>97.1</td><td>69.6 <span class="drop">↓27.5</span></td><td>56.4</td><td>31.9</td><td>79.5</td><td>88.7</td><td>93.3</td><td>75.8</td><td>74.2</td></tr>
+            <tr><th scope="row">NORA</th><td>Yes</td><td>87.9</td><td>39.0 <span class="drop">↓48.9</span></td><td>2.2</td><td>37.0</td><td>65.1</td><td>45.7</td><td>58.6</td><td>12.8</td><td>62.1</td></tr>
+            <tr><th scope="row">UniVLA</th><td>Yes</td><td>95.2</td><td>42.9 <span class="drop">↓52.3</span></td><td>1.8</td><td>46.2</td><td>69.6</td><td>69.0</td><td>81.0</td><td>21.2</td><td>31.9</td></tr>
+            <tr><th scope="row">π<sub>0</sub></th><td>Yes</td><td>94.1</td><td>53.6 <span class="drop">↓40.5</span></td><td>13.8</td><td>6.0</td><td>58.8</td><td>85.0</td><td>81.4</td><td>79.0</td><td>68.9</td></tr>
+            <tr><th scope="row">π<sub>0</sub>-FAST</th><td>Yes</td><td>85.5</td><td>61.6 <span class="drop">↓23.9</span></td><td>65.1</td><td>21.6</td><td>61.0</td><td>73.2</td><td>73.2</td><td>74.4</td><td>68.8</td></tr>
+            <tr><th scope="row">RIPT-VLA</th><td>Yes</td><td>97.5</td><td>68.4 <span class="drop">↓29.1</span></td><td>55.2</td><td>31.2</td><td>77.6</td><td>88.4</td><td>91.6</td><td>73.5</td><td>74.2</td></tr>
+            <tr><th scope="row">VLA-JEPA</th><td>Yes</td><td>97.2</td><td>79.5 <span class="drop">↓17.7</span></td><td>63.3</td><td>67.1</td><td><b>85.4</b></td><td>95.6</td><td>93.6</td><td>66.3</td><td>85.1</td></tr>
+            <tr><th scope="row">π<sub>0.5</sub></th><td>Yes</td><td>96.9</td><td><b>84.7</b> <span class="drop">↓12.2</span></td><td>72.2</td><td><b>76.8</b></td><td>85.1</td><td>96.2</td><td><b>95.5</b></td><td>87.0</td><td><b>86.9</b></td></tr>
+            <tr><th scope="row">ELAN4D</th><td>Yes</td><td>97.0</td><td>78.2 <span class="drop">↓18.8</span></td><td>63.7</td><td>70.7</td><td>77.8</td><td>89.8</td><td>91.4</td><td>79.9</td><td>81.4</td></tr>
+            <tr class="cat"><th colspan="11" scope="rowgroup">World-action models</th></tr>
+            <tr><th scope="row">WorldVLA</th><td>No</td><td>79.1</td><td>25.0 <span class="drop">↓54.1</span></td><td>0.1</td><td>27.9</td><td>41.6</td><td>43.7</td><td>17.1</td><td>10.9</td><td>38.0</td></tr>
+            <tr><th scope="row">Fast-WAM</th><td>No</td><td>97.6</td><td>70.2 <span class="drop">↓27.4</span></td><td>48.1</td><td>72.5</td><td>70.0</td><td>96.7</td><td>66.0</td><td>69.7</td><td>78.1</td></tr>
+            <tr><th scope="row">Flex-π (full joint)</th><td>Yes</td><td><b>98.5</b></td><td>80.9 <span class="drop">↓17.6</span></td><td>73.7</td><td>53.1</td><td>84.3</td><td>91.9</td><td>93.8</td><td>93.4</td><td>82.9</td></tr>
+            <tr><th scope="row">Flex-π (action-only)</th><td>Yes</td><td>98.4</td><td>78.3 <span class="drop">↓20.1</span></td><td>71.9</td><td>50.7</td><td>83.3</td><td>91.9</td><td>91.9</td><td>91.5</td><td>80.4</td></tr>
+            <tr class="ours"><th scope="row">SLAP (ours)</th><td>No</td><td>97.3</td><td>80.8 <span class="drop">↓16.5</span></td><td><b>90.2</b></td><td>55.5</td><td>81.2</td><td><b>97.1</b></td><td>65.4</td><td><b>95.3</b></td><td>78.4</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Among world-action models trained without large-scale robot data, SLAP improves LIBERO-Plus by 10.6 points over Fast-WAM and is best of all methods under camera, lighting, and sensor-noise perturbations.</p>
+
+      <div class="charts">
+        <article class="chart-card">
+          <h3>Latency per action chunk</h3>
+          <p class="chart-sub">Wall-clock time from observation to action chunk, mean of 10 runs after warm-up.</p>
+          <ul class="hbars" style="--max: 650">
+            <li style="--v: 222.7"><span class="lbl">Flex-π (action)</span><span class="bar"></span><span class="val">222.7 ms</span></li>
+            <li style="--v: 273.3"><span class="lbl">π<sub>0.5</sub></span><span class="bar"></span><span class="val">273.3 ms</span></li>
+            <li class="ours" style="--v: 279.9"><span class="lbl">SLAP</span><span class="bar"></span><span class="val">279.9 ms</span></li>
+            <li style="--v: 529.1"><span class="lbl">Fast-WAM</span><span class="bar"></span><span class="val">529.1 ms</span></li>
+            <li style="--v: 617.0"><span class="lbl">Flex-π (joint)</span><span class="bar"></span><span class="val">617.0 ms</span></li>
+            <li class="broken" style="--v: 650"><span class="lbl">LingBot-VA</span><span class="bar"></span><span class="val">5262.6 ms</span></li>
+          </ul>
+          <p class="chart-foot">SLAP is 1.9× faster than Fast-WAM, 2.2× faster than Flex-π (joint), and 19× faster than LingBot-VA.</p>
+        </article>
+
+        <article class="chart-card">
+          <h3>Real robot: in- vs. out-of-distribution</h3>
+          <p class="chart-sub">Average success over four UR5e tasks. OOD aggregates four perturbation conditions.</p>
+          <div class="vbars" role="img" aria-label="SLAP: 95.0 percent in-distribution, 87.5 percent out-of-distribution. pi 0.5: 85.0 percent in-distribution, 58.8 percent out-of-distribution.">
+            <div class="vgroup">
+              <div class="vcol id" style="--v: 95.0"><span>95.0</span></div>
+              <div class="vcol ood" style="--v: 87.5"><span>87.5</span></div>
+              <p>SLAP</p>
+            </div>
+            <div class="vgroup other">
+              <div class="vcol id" style="--v: 85.0"><span>85.0</span></div>
+              <div class="vcol ood" style="--v: 58.8"><span>58.8</span></div>
+              <p>π<sub>0.5</sub></p>
+            </div>
+          </div>
+          <p class="legend"><span class="sw id"></span>In-distribution <span class="sw ood"></span>Out-of-distribution</p>
+          <p class="chart-foot">SLAP drops 7.5 points under perturbation; the robot-pretrained π<sub>0.5</sub> drops 26.2.</p>
+        </article>
+      </div>
+
+    </section>
+
+    <!-- ============================== ABLATIONS ============================== -->
+    <section class="wrap" id="ablations">
+      <div class="section-head">
+        <p class="num">04</p>
+        <h2>What makes SLAP work</h2>
+        <p class="lede">All variants share the architecture and action objective; we change one factor at a time. Numbers are LIBERO / LIBERO-Plus success (%), with the LIBERO-Plus breakdown per perturbation.</p>
+      </div>
+
+      <div class="ablation">
+        <div class="ab-text">
+          <h3>Supervision space: semantic latents beat pixels</h3>
+          <p>Pixel-level video flow matching has the best clean LIBERO score but falls to 74.3 on LIBERO-Plus, collapsing under camera (50.9) and noise (72.0) shifts. All three semantic targets (DINOv3, SigLIP, V-JEPA) land at 80–82, so the gain comes from leaving pixel space rather than from any one encoder. An action-only model with no visual objective is <em>more</em> robust than pixel prediction, but loses 3 points on clean LIBERO.</p>
+        </div>
+        <div class="table-scroll">
+          <table class="results compact">
+            <thead>
+              <tr><th scope="col">Target</th><th scope="col">LIBERO</th><th scope="col">Plus</th><th scope="col">Cam.</th><th scope="col">Robot</th><th scope="col">Lang.</th><th scope="col">Light</th><th scope="col">BG</th><th scope="col">Noise</th><th scope="col">Layout</th></tr>
+            </thead>
+            <tbody>
+              <tr class="ours"><th scope="row">DINOv3</th><td>97.3</td><td>80.8</td><td><b>90.2</b></td><td>55.5</td><td>81.2</td><td>97.1</td><td>65.4</td><td><b>95.3</b></td><td>78.4</td></tr>
+              <tr><th scope="row">SigLIP</th><td>96.7</td><td>79.9</td><td>87.3</td><td>57.0</td><td>81.5</td><td><b>97.2</b></td><td>66.3</td><td>90.5</td><td>79.5</td></tr>
+              <tr><th scope="row">V-JEPA</th><td>96.9</td><td><b>81.8</b></td><td>89.7</td><td>60.8</td><td>77.8</td><td>93.4</td><td><b>79.5</b></td><td>92.8</td><td><b>80.1</b></td></tr>
+              <tr class="bad-row"><th scope="row">Video FM (pixels)</th><td><b>97.6</b></td><td>74.3</td><td>50.9</td><td><b>74.5</b></td><td><b>90.6</b></td><td>95.9</td><td>58.9</td><td>72.0</td><td>79.0</td></tr>
+              <tr><th scope="row">Action only</th><td>94.1</td><td>77.2</td><td>85.7</td><td>58.0</td><td>64.0</td><td>91.5</td><td>71.4</td><td>92.6</td><td>78.5</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="ablation">
+        <div class="ab-text">
+          <h3>Read-out depth: the middle layer is best</h3>
+          <p>Reading out at layer 15 of 30 beats the final layer on both benchmarks while halving the backbone compute. The final layer (30) is increasingly specialized to pixel generation and is brittle to camera shifts (59.3), while an early layer (8) has not yet built enough scene structure for control.</p>
+          <ul class="layer-strip" aria-label="LIBERO-Plus success by read-out layer">
+            <li style="--v: 70.7"><span class="bar"></span><b>70.7</b><i>K = 8</i></li>
+            <li class="ours" style="--v: 80.8"><span class="bar"></span><b>80.8</b><i>K = 15</i></li>
+            <li style="--v: 78.3"><span class="bar"></span><b>78.3</b><i>K = 20</i></li>
+            <li style="--v: 75.8"><span class="bar"></span><b>75.8</b><i>K = 30</i></li>
+          </ul>
+        </div>
+        <div class="table-scroll">
+          <table class="results compact">
+            <thead>
+              <tr><th scope="col">Layer</th><th scope="col">LIBERO</th><th scope="col">Plus</th><th scope="col">Cam.</th><th scope="col">Robot</th><th scope="col">Lang.</th><th scope="col">Light</th><th scope="col">BG</th><th scope="col">Noise</th><th scope="col">Layout</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">30 (final)</th><td>96.1</td><td>75.8</td><td>59.3</td><td><b>66.6</b></td><td>79.8</td><td>93.3</td><td><b>79.8</b></td><td>80.5</td><td>77.0</td></tr>
+              <tr><th scope="row">20</th><td>96.0</td><td>78.3</td><td>83.1</td><td>56.3</td><td>76.3</td><td>94.5</td><td>66.7</td><td>91.0</td><td><b>80.4</b></td></tr>
+              <tr class="ours"><th scope="row">15</th><td><b>97.3</b></td><td><b>80.8</b></td><td><b>90.2</b></td><td>55.5</td><td><b>81.2</b></td><td><b>97.1</b></td><td>65.4</td><td><b>95.3</b></td><td>78.4</td></tr>
+              <tr><th scope="row">8</th><td>91.4</td><td>70.7</td><td>82.4</td><td>52.3</td><td>68.2</td><td>90.6</td><td>40.7</td><td>82.2</td><td>73.4</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="note">Data efficiency: with only 10 demonstrations per task SLAP already reaches 69.2% success, comparable to strong VLA baselines such as OpenVLA-OFT and π<sub>0</sub>-FAST, and keeps improving at 20, 30, and 50 demonstrations.</p>
+    </section>
+
+    <!-- ============================== REAL ROBOT ============================== -->
+    <section class="wrap" id="real">
+      <div class="section-head">
+        <p class="num">05</p>
+        <h2>Real-robot rollouts</h2>
+        <p class="lede">
+          Four tasks on a UR5e arm, each learned from 30 demonstrations. At test time we move the gripper's starting pose, dim the lights, add unseen clutter, or cover the table with a black mat, sometimes all at once. Every rollout is fully autonomous.
+        </p>
+      </div>
+
+      <div class="grid two">
+        <figure class="card">
+          <button type="button" class="frame" data-full="static/videos/real/fork-layout.mp4" data-title="Fork onto the plate · table layout">
+            <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/fork-layout.jpg" src="static/videos/real/fork-layout.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Table layout</span></p>
+            <h3>Fork onto the plate</h3>
+            <p>Unseen objects sit around the plate: a bowl, a pot, cups, and a banana. The gripper isolates the fork and lays it on the plate.</p>
+          </figcaption>
+        </figure>
+        <figure class="card">
+          <button type="button" class="frame" data-full="static/videos/real/spoon-layout-appearance.mp4" data-title="Spoon onto the plate · layout + appearance">
+            <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/spoon-layout-appearance.jpg" src="static/videos/real/spoon-layout-appearance.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Table layout</span><span>Table appearance</span></p>
+            <h3>Spoon onto the plate</h3>
+            <p>The workspace is covered by a dark mat and the distractors are rearranged. The spoon is still picked up and placed on the plate.</p>
+          </figcaption>
+        </figure>
+        <figure class="card">
+          <button type="button" class="frame" data-full="static/videos/real/cup-pose-layout.mp4" data-title="Cup onto the plate · shifted start + layout">
+            <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/cup-pose-layout.jpg" src="static/videos/real/cup-pose-layout.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Gripper pose</span><span>Table layout</span></p>
+            <h3>Cup onto the plate</h3>
+            <p>The arm begins away from the training pose, with a fork, spoon, cups, and other objects on the table. It takes the red cup by the rim and stands it upright on the plate.</p>
+          </figcaption>
+        </figure>
+        <figure class="card">
+          <button type="button" class="frame" data-full="static/videos/real/cup-pose-layout-2.mp4" data-title="Cup onto the plate · shifted start + layout">
+            <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/cup-pose-layout-2.jpg" src="static/videos/real/cup-pose-layout-2.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Gripper pose</span><span>Table layout</span></p>
+            <h3>Cup onto the plate, new clutter</h3>
+            <p>A second shifted start with a different set of distractors: a yellow box, a banana, a spoon, and small bowls. The cup still ends upright on the plate.</p>
+          </figcaption>
+        </figure>
+        <figure class="card">
+          <button type="button" class="frame" data-full="static/videos/real/cup-layout-appearance.mp4" data-title="Cup onto the plate · layout + appearance">
+            <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/cup-layout-appearance.jpg" src="static/videos/real/cup-layout-appearance.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Table layout</span><span>Table appearance</span></p>
+            <h3>Cup onto the plate, dark mat</h3>
+            <p>The same placement on the dark mat, with a different arrangement of distractors. The cup stays upright after release.</p>
+          </figcaption>
+        </figure>
+        <figure class="card">
+          <button type="button" class="frame" data-full="static/videos/real/cable-layout.mp4" data-title="Cable into the drawer · table layout">
+            <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/cable-layout.jpg" src="static/videos/real/cable-layout.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Table layout</span></p>
+            <h3>Cable into the drawer, cluttered table</h3>
+            <p>A bowl, cup, banana, and box surround the drawer. The policy still treats the cable as the target, places it inside, and closes the drawer.</p>
+          </figcaption>
+        </figure>
+        <figure class="card">
+          <button type="button" class="frame" data-full="static/videos/real/cable-pose.mp4" data-title="Cable into the drawer · shifted start + lighting">
+            <video class="clip ar-cable" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/cable-pose.jpg" src="static/videos/real/cable-pose.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Gripper pose</span><span>Lighting</span></p>
+            <h3>Cable into the drawer, dim room</h3>
+            <p>The gripper starts well off the training configuration and the room lighting is reduced. It still collects the cable, drops it inside the drawer, and pushes the drawer shut.</p>
+          </figcaption>
+        </figure>
+        <figure class="card">
+          <button type="button" class="frame" data-full="static/videos/real/cable-pose-2.mp4" data-title="Cable into the drawer · shifted start">
+            <video class="clip ar-cable" muted loop playsinline preload="none" data-autoplay poster="static/posters/real/cable-pose-2.jpg" src="static/videos/real/cable-pose-2.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Gripper pose</span></p>
+            <h3>Cable into the drawer, shifted start</h3>
+            <p>The arm starts high and to the side of its training pose. It moves down to the cable, drops it into the drawer, and closes the drawer.</p>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="group-label" id="compare">
+        <h3>SLAP vs. π<sub>0.5</sub>: recovering from mistakes</h3>
+        <p>Same task, gripper starting from an unseen pose.</p>
+      </div>
+      <p class="lede tight">
+        Both policies miss their first grasp. SLAP simply tries again; π<sub>0.5</sub> gets stuck.
+      </p>
+
+      <div class="versus">
+        <h4>Spoon onto the plate</h4>
+        <div class="grid two">
+          <figure class="card">
+            <button type="button" class="frame" data-full="static/videos/compare/slap-spoon.mp4" data-title="SLAP · spoon onto the plate">
+              <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/compare/slap-spoon.jpg" src="static/videos/compare/slap-spoon.mp4"></video>
+            </button>
+            <figcaption>
+              <p class="tags"><span class="who">SLAP</span><span class="ok">Success</span></p>
+              <p>After a missed grasp, the arm quickly re-approaches, picks up the spoon, and sets it on the plate.</p>
+            </figcaption>
+          </figure>
+          <figure class="card">
+            <button type="button" class="frame" data-full="static/videos/compare/pi05-spoon.mp4" data-title="π0.5 · spoon onto the plate">
+              <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/compare/pi05-spoon.jpg" src="static/videos/compare/pi05-spoon.mp4"></video>
+            </button>
+            <figcaption>
+              <p class="tags"><span class="who other">π<sub>0.5</sub></span><span class="bad">Failure</span></p>
+              <p>From a similar start, the arm fails to recover from its missed grasp.</p>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="versus">
+        <h4>Cable into the drawer</h4>
+        <div class="grid two">
+          <figure class="card">
+            <button type="button" class="frame" data-full="static/videos/compare/slap-cable.mp4" data-title="SLAP · cable into the drawer">
+              <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/compare/slap-cable.jpg" src="static/videos/compare/slap-cable.mp4"></video>
+            </button>
+            <figcaption>
+              <p class="tags"><span class="who">SLAP</span><span class="ok">Success</span></p>
+              <p>From an unseen start, the arm collects the cable, drops it in the open drawer, and pushes the drawer shut.</p>
+            </figcaption>
+          </figure>
+          <figure class="card">
+            <button type="button" class="frame" data-full="static/videos/compare/pi05-cable.mp4" data-title="π0.5 · cable into the drawer">
+              <video class="clip ar-real" muted loop playsinline preload="none" data-autoplay poster="static/posters/compare/pi05-cable.jpg" src="static/videos/compare/pi05-cable.mp4"></video>
+            </button>
+            <figcaption>
+              <p class="tags"><span class="who other">π<sub>0.5</sub></span><span class="bad">Failure</span></p>
+              <p>With the changed starting position, the arm hovers over the cable and never proceeds with the task.</p>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================== SIMULATION ============================== -->
+    <section class="wrap" id="sim">
+      <div class="section-head">
+        <p class="num">06</p>
+        <h2>LIBERO-Plus rollouts</h2>
+        <p class="lede">LIBERO-Plus changes the camera, lighting, sensor noise, robot start, and more. Here is one rollout from each task suite. Each video shows the third-person view (left) and the wrist view (right).</p>
+      </div>
+
+      <div class="grid two">
+        <figure class="card sim">
+          <button type="button" class="frame" data-full="static/videos/sim/spatial-camera.mp4" data-title="Spatial · camera viewpoint">
+            <video class="clip ar-sim" muted loop playsinline preload="none" data-autoplay poster="static/posters/sim/spatial-camera.jpg" src="static/videos/sim/spatial-camera.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Camera viewpoint</span><span class="suite">Spatial</span></p>
+            <p class="quote">“Pick up the black bowl next to the cookie box and place it on the plate.”</p>
+            <p>The third-person camera is rotated and shifted. The bowl beside the cookie box is the one that ends on the plate.</p>
+          </figcaption>
+        </figure>
+        <figure class="card sim">
+          <button type="button" class="frame" data-full="static/videos/sim/object-noise.mp4" data-title="Object · sensor noise">
+            <video class="clip ar-sim" muted loop playsinline preload="none" data-autoplay poster="static/posters/sim/object-noise.jpg" src="static/videos/sim/object-noise.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Sensor noise</span><span class="suite">Object</span></p>
+            <p class="quote">“Pick up the orange juice and place it in the basket.”</p>
+            <p>Noise is added to the camera observations. The juice carton is told apart from the neighboring bottles and placed in the basket.</p>
+          </figcaption>
+        </figure>
+        <figure class="card sim">
+          <button type="button" class="frame" data-full="static/videos/sim/goal-light.mp4" data-title="Goal · lighting">
+            <video class="clip ar-sim" muted loop playsinline preload="none" data-autoplay poster="static/posters/sim/goal-light.jpg" src="static/videos/sim/goal-light.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Lighting</span><span class="suite">Goal</span></p>
+            <p class="quote">“Open the middle drawer of the cabinet.”</p>
+            <p>Illumination differs from the training scenes. The arm pulls the middle drawer open.</p>
+          </figcaption>
+        </figure>
+        <figure class="card sim">
+          <button type="button" class="frame" data-full="static/videos/sim/long-robot.mp4" data-title="Long · robot initial state">
+            <video class="clip ar-sim" muted loop playsinline preload="none" data-autoplay poster="static/posters/sim/long-robot.jpg" src="static/videos/sim/long-robot.mp4"></video>
+          </button>
+          <figcaption>
+            <p class="tags"><span>Robot initial state</span><span class="suite">Long</span></p>
+            <p class="quote">“Turn on the stove and put the moka pot on it.”</p>
+            <p>The arm starts from a different configuration. It turns the knob, then sets the pot on the burner.</p>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============================== BIBTEX ============================== -->
+    <section class="wrap" id="bibtex">
+      <div class="section-head">
+        <p class="num">07</p>
+        <h2>BibTeX</h2>
+      </div>
+      <div class="bib">
+        <button type="button" class="copy" data-copy="#bib-text">Copy</button>
+        <pre id="bib-text"><code>@misc{slap2027,
+  title = {Predicting Semantic Latents for Robust and Efficient World-Action Models},
+  year  = {2027}
+}</code></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>SLAP · Predicting Semantic Latents for Robust and Efficient World-Action Models.</p>
+      <p>Videos are compressed for the web; click a rollout or figure to enlarge it.</p>
+    </div>
+  </footer>
+
+  <dialog id="viewer" aria-labelledby="viewer-title">
+    <form method="dialog">
+      <button class="close" value="close" aria-label="Close">Close</button>
+    </form>
+    <p id="viewer-title"></p>
+    <div id="viewer-body"></div>
+  </dialog>
+
+  <script src="static/js/site.js?v=2"></script>
+</body>
+</html>
