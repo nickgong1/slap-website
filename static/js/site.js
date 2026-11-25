@@ -65,8 +65,7 @@
 
   if ("IntersectionObserver" in window) {
     // Animate the bar charts the first time they scroll into view.
-    const charts = document.querySelector(".charts");
-    if (charts) {
+    document.querySelectorAll(".charts").forEach((charts) => {
       const once = new IntersectionObserver(([entry]) => {
         if (entry.isIntersecting) {
           charts.classList.add("animate");
@@ -74,7 +73,7 @@
         }
       }, { threshold: 0.3 });
       once.observe(charts);
-    }
+    });
 
     // Highlight the nav link of the section in view.
     const links = new Map(

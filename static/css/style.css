@@ -528,6 +528,19 @@ table.results {
 .sw.id { background: linear-gradient(90deg, var(--pine) 50%, #8b8378 50%); }
 .sw.ood { background: linear-gradient(90deg, #7fa597 50%, #cdbfa9 50%); }
 
+.chart-card .chart-h-2 { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); }
+.hbars.steps li { grid-template-columns: 160px 1fr 88px; line-height: 1.25; margin: 10px 0; }
+.hbars li.mid .bar { background: #7fa597; }
+.chart-foot .pine { color: var(--pine); }
+
+.charts.data-eff { grid-template-columns: 1fr 1fr; margin-top: 20px; }
+.data-eff .hbars li { grid-template-columns: 150px 1fr 48px; }
+.hbars.zoom .bar { width: calc((var(--v) - var(--min)) / (var(--max) - var(--min)) * 100%); }
+.hbars li.gap { margin-top: 18px; }
+.data-eff + .legend { margin: 14px 0 0; }
+.sw.slap { background: var(--pine); margin-right: 0; }
+.sw.vla { background: #cfc5b4; margin-right: 0; }
+
 .charts.animate .hbars .bar { animation: grow-x 0.9s cubic-bezier(.2, .7, .2, 1) both; }
 .charts.animate .vcol { animation: grow-y 0.9s cubic-bezier(.2, .7, .2, 1) both; }
 @keyframes grow-x { from { transform: scaleX(0); } }
@@ -564,6 +577,7 @@ video.clip { display: block; width: 100%; height: auto; background: #161412; }
 
 .card figcaption { padding: 14px 18px 16px; }
 .card h3 { font-size: 22px; }
+.card figcaption > :last-child { margin-bottom: 0 !important; }
 .card p { color: var(--muted); margin: 0 0 6px; font-size: 16.5px; }
 
 .tags { margin: 0 0 8px !important; display: flex; flex-wrap: wrap; gap: 6px; }
@@ -584,6 +598,7 @@ video.clip { display: block; width: 100%; height: auto; background: #161412; }
 .tags span.ok { color: var(--ok); background: #e2f0e6; }
 .tags span.bad { color: var(--bad); background: #f6e2dd; }
 .tags span.suite { color: var(--muted); background: var(--bg-2); }
+.tags span.lead { color: var(--muted); background: none; padding-left: 0; padding-right: 2px; }
 
 .quote {
   font-family: var(--serif);
@@ -725,7 +740,7 @@ dialog::backdrop { background: rgba(20, 16, 12, 0.78); }
 
 /* ---------- responsive ---------- */
 @media (max-width: 1080px) {
-  .charts, .ab-text { grid-template-columns: 1fr; }
+  .charts, .charts.data-eff, .ab-text { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 900px) {
@@ -748,6 +763,8 @@ dialog::backdrop { background: rgba(20, 16, 12, 0.78); }
   .abstract { padding: 22px 20px 8px; }
   .abstract p { text-align: left; }
   .hbars li { grid-template-columns: 96px 1fr 76px; font-size: 13.5px; }
+  .data-eff .hbars li { grid-template-columns: 124px 1fr 40px; }
+  .hbars.steps li { grid-template-columns: 120px 1fr 76px; }
   .vbars { gap: 28px; }
 }
 
